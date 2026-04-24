@@ -57,6 +57,22 @@ class TestDeepSeekReasoningContent(unittest.TestCase):
         self.assertEqual(converted[0]["tool_calls"][0]["id"], "call_1")
         self.assertEqual(json.loads(converted[0]["tool_calls"][0]["function"]["arguments"])["script"], "pwd")
 
+    def test_deepseek_tool_call_history_gets_empty_reasoning_fallback(self):
+        from llmcore import _msgs_claude2oai
+
+        messages = [{
+            "role": "assistant",
+            "content": [
+                {"type": "tool_use", "id": "call_1", "name": "code_run", "input": {"type": "bash", "script": "pwd"}},
+            ],
+        }]
+
+        without_fallback = _msgs_claude2oai(messages)
+        with_fallback = _msgs_claude2oai(messages, ensure_reasoning_content=True)
+
+        self.assertNotIn("reasoning_content", without_fallback[0])
+        self.assertEqual(with_fallback[0]["reasoning_content"], "")
+
 
 if __name__ == "__main__":
     unittest.main()

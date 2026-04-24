@@ -429,7 +429,7 @@ def _to_responses_input(messages):
     return result
 
 
-def _msgs_claude2oai(messages):
+def _msgs_claude2oai(messages, ensure_reasoning_content=False):
     result = []
     for msg in messages:
         role = msg.get("role", "user")
@@ -449,8 +449,9 @@ def _msgs_claude2oai(messages):
             m = {"role": "assistant"}
             if text_parts: m["content"] = text_parts
             else: m["content"] = ""
-            if reasoning_parts: m["reasoning_content"] = "\n".join(reasoning_parts)
             if tool_calls: m["tool_calls"] = tool_calls
+            if reasoning_parts: m["reasoning_content"] = "\n".join(reasoning_parts)
+            elif ensure_reasoning_content and tool_calls: m["reasoning_content"] = ""
             result.append(m)
         elif role == "user":
             text_parts = []
@@ -662,7 +663,8 @@ class NativeClaudeSession(BaseSession):
 class NativeOAISession(NativeClaudeSession):
     def raw_ask(self, messages):
         messages = _fix_messages(messages)
-        return (yield from _openai_stream(self.api_base, self.api_key, _msgs_claude2oai(messages), self.model, self.api_mode,
+        is_deepseek = 'deepseek' in f'{self.api_base} {self.model}'.lower()
+        return (yield from _openai_stream(self.api_base, self.api_key, _msgs_claude2oai(messages, ensure_reasoning_content=is_deepseek), self.model, self.api_mode,
                                           system=self.system, temperature=self.temperature, max_tokens=self.max_tokens,
                                           tools=self.tools, reasoning_effort=self.reasoning_effort,
                                           max_retries=self.max_retries, connect_timeout=self.connect_timeout,
