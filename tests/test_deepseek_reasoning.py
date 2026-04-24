@@ -8,6 +8,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class TestDeepSeekReasoningContent(unittest.TestCase):
+    def test_reasoning_effort_max_is_accepted(self):
+        from llmcore import NativeOAISession
+
+        session = NativeOAISession({
+            "apikey": "test-key",
+            "apibase": "https://api.deepseek.com",
+            "model": "deepseek-v4-flash",
+            "reasoning_effort": "max",
+        })
+
+        self.assertEqual(session.reasoning_effort, "max")
+
     def test_stream_reasoning_content_is_preserved(self):
         from llmcore import _parse_openai_sse
 
